@@ -1,29 +1,66 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App" />
+  <div>
+    <header>
+      <h1>TODO-APP</h1>
+    </header>
+    <main>
+      <TodoInput :item="todoText" @input="updateTodoText" @add="addTodoItem" />
+      <TodoListItem v-for="(todoItem, index) in todoItems" :key="index" :todoItem="todoItem" :index="index" @remove="removeItem"/>
+    </main>
   </div>
 </template>
 
+
 <script lang="ts">
 import Vue from "vue";
-import HelloWorld from "./components/HelloWorld.vue";
+import TodoInput from "./components/TodoInput.vue";
+import TodoListItem from "@/components/TodoListItem.vue";
 
-export default Vue.extend({
-  name: "App",
-  components: {
-    HelloWorld,
+const STORAGE_KEY = 'vue-todo-ts-v1'
+const storage = {
+  save(todoItems : any[]){
+    const parsed = JSON.stringify(todoItems)
+    localStorage.setItem(STORAGE_KEY, parsed);
   },
+  fetch(){
+    const todoItems = localStorage.getItem(STORAGE_KEY) || [];
+    const result = JSON.parse(todoItems);
+    return result;
+  },
+}
+export default Vue.extend({
+  components: { TodoListItem, TodoInput },
+  created() {
+    this.fetchTodoItems();
+  },
+  methods: {
+    init(){
+      this.todoText = ""
+    },
+    updateTodoText(value: string) {
+      this.todoText = value;
+    },
+    addTodoItem() {
+      const value = this.todoText;
+      this.todoItems.push(value);
+      storage.save(this.todoItems)
+      this.init();
+    },
+    fetchTodoItems(){
+      this.todoItems = storage.fetch();
+    },
+    removeItem(index : number){
+      this.todoItems.splice(index,1);
+      storage.save(this.todoItems);
+    }
+
+  },
+  data() {
+    return {
+      todoText: "",
+      todoItems : []
+    };
+  }
+
 });
 </script>
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
